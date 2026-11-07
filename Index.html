@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hunter System</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d0f18">
+    <style>
+        :root {
+            --bg-color: #080a0f;
+            --panel-bg: rgba(13, 15, 24, 0.85);
+            --border-color: rgba(245, 158, 11, 0.3);
+            --border-glow: rgba(245, 158, 11, 0.7);
+            --primary-orange: #f59e0b;
+            --accent-glow: #ff7700;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: rgba(8, 10, 15, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--primary-orange);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 10px;
+        }
+
+        .badge-pill {
+            background: rgba(20, 24, 36, 0.9);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        main {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 90px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sci-Fi Panels */
+        .scifi-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .scifi-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid var(--primary-orange);
+            border-left: 2px solid var(--primary-orange);
+        }
+
+        .scifi-panel::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            border-bottom: 2px solid var(--primary-orange);
+            border-right: 2px solid var(--primary-orange);
+        }
+
+        .panel-header {
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            color: var(--primary-orange);
+            margin-bottom: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Profile & Status */
+        .profile-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .avatar-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-orange);
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 158, 11, 0.1);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            font-size: 2rem;
+        }
+
+        .hunter-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .hunter-rank {
+            font-size: 0.9rem;
+            color: var(--primary-orange);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .hunter-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .progress-bar-container {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            height: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--primary-orange), #ffae00);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 8px var(--primary-orange);
+        }
+
+        /* Buttons & Controls */
+        .scifi-btn {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+            border: 1px solid var(--primary-orange);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+
+        .scifi-btn:active {
+            transform: scale(0.98);
+            background: rgba(245, 158, 11, 0.4);
+        }
+
+        .scifi-btn.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Quest List */
+        .quest-item {
+            background: rgba(20, 24, 36, 0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quest-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quest-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .quest-reward {
+            font-size: 0.75rem;
+            color: var(--primary-orange);
+        }
+
+        .quest-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .proof-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        /* Bottom Nav */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(8, 10, 15, 0.98);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary-orange);
+            text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+
+        .cal-day {
+            background: rgba(20, 24, 36, 0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 8px 0;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .cal-day.completed {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .cal-day.active-today {
+            border-color: var(--primary-orange);
+            color: var(--primary-orange);
+            font-weight: bold;
+        }
+
+        /* Inputs */
+        .scifi-input {
+            width: 100%;
+            background: rgba(10, 12, 18, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .scifi-input:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Modal Overlay */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-color);
+            border: 1px solid var(--primary-orange);
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">HUNTER SYSTEM</div>
+        <div class="header-stats">
+            <div class="badge-pill" id="header-lvl">LV 1</div>
+            <div class="badge-pill" id="header-gold">🪙 0</div>
+        </div>
+    </header>
+
+    <main>
+        <!-- HUNTER TAB -->
+        <div id="tab-hunter" class="tab-content active">
+            <div class="scifi-panel profile-card">
+                <div class="avatar-container" id="hunter-avatar">🛡️</div>
+                <div class="hunter-name" id="profile-name">Shuaib</div>
+                <div class="hunter-rank" id="profile-rank">BRONZE III</div>
+                <div class="hunter-meta">CLASS: NOVICE | POWER <span id="profile-power">300</span> | 🔥 <span id="profile-streak">0</span>d</div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="xp-bar"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                    <span id="current-xp">0</span> / <span id="max-xp">100</span> XP
+                </div>
+            </div>
+
+            <!-- Ability Matrix / Stats -->
+            <div class="scifi-panel">
+                <div class="panel-header">◆ SYSTEM CONTROLS & SETTINGS</div>
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Hunter Name</label>
+                <input type="text" id="input-name" class="scifi-input" placeholder="Enter Name">
+                <div class="flex-row">
+                    <button class="scifi-btn" onclick="saveProfileSettings()">Update Profile</button>
+                    <button class="scifi-btn danger" onclick="confirmResetAll()">All Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUEST TAB (Day 1-30 & Month progression with Photo Proof) -->
+        <div id="tab-quest" class="tab-content">
+            <div class="scifi-panel">
+                <div class="panel-header">
+                    <span id="quest-time-title">MONTH 1 • DAY 1 / 30</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 0.9rem; font-weight: bold;" id="tasks-progress-text">0/4 TASKS COMPLETED</div>
+                    <div style="font-size: 0.75rem; color: var(--primary-orange);" id="day-reset-timer">Reset in 24:00:00</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="tasks-bar"></div>
+                </div>
+            </div>
+
+            <div class="scifi-panel">
+                <div class="panel-header">◆ DAILY EXERCISE QUESTS (PHOTO PROOF REQUIRED)</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">
+                    ⚠️ Note: XP tabhi milegi jab aap exercise karte hue camera se pic upload karenge!
+                </div>
+                <div id="quest-list-container">
+                    <!-- Dynamic Quests Injected Here -->
+                </div>
+            </div>
+
+            <div class="scifi-panel">
+                <div class="panel-header">◆ PROGRESS CALENDAR (DAY 1 TO 30)</div>
+                <div class="calendar-grid" id="calendar-grid-container">
+                    <!-- Generated 30 Days -->
+                </div>
+            </div>
+        </div>
+
+        <!-- DUNGEON / SHOP TAB -->
+        <div id="tab-dungeon" class="tab-content">
+            <div class="scifi-panel" style="text-align: center;">
+                <div class="panel-header">◆ WEEKLY BOSS RAID</div>
+                <div style="font-size: 3rem; margin: 10px 0;">👹</div>
+                <div style="font-weight: bold; font-size: 1.1rem; color: var(--danger);" id="boss-name">FLAME TITAN</div>
+                <div class="progress-bar-container" style="margin: 12px 0;">
+                    <div class="progress-bar-fill" id="boss-hp-bar" style="background: var(--danger); width: 100%;"></div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;" id="boss-hp-text">HP 250 / 250</div>
+                <button class="scifi-btn" onclick="attackBoss()">Attack Boss (Use Completed Tasks)</button>
+            </div>
+
+            <div class="scifi-panel">
+                <div class="panel-header">◆ SYSTEM SHOP</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(20,24,36,0.6); padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <div style="font-weight: bold; font-size: 0.85rem;">Streak Shield</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Bachaata hai streak tutne se</div>
+                        </div>
+                        <button class="scifi-btn" style="width: auto; padding: 6px 12px;" onclick="buyItem('shield', 150)">🪙 150</button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(20,24,36,0.6); padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <div style="font-weight: bold; font-size: 0.85rem;">XP Scroll x2</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Aaj ka saara XP double</div>
+                        </div>
+                        <button class="scifi-btn" style="width: auto; padding: 6px 12px;" onclick="buyItem('scroll', 100)">🪙 100</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NETWORK TAB (Hunter ID, Scan & Challenge) -->
+        <div id="tab-network" class="tab-content">
+            <div class="scifi-panel">
+                <div class="panel-header">◆ SHARE YOUR HUNTER PROFILE</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">TUMHARA HUNTER ID & CODE</div>
+                <input type="text" id="my-hunter-code" class="scifi-input" readonly value="HNT-KGWNG-300">
+                <div class="flex-row">
+                    <button class="scifi-btn" onclick="copyHunterCode()">Copy Code</button>
+                    <button class="scifi-btn" onclick="shareHunterCard()">Share Card</button>
+                </div>
+            </div>
+
+            <div class="scifi-panel">
+                <div class="panel-header">◆ SCAN / CHALLENGE ANOTHER HUNTER</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Dost ka Hunter ID ya Code yahan enter karein:</div>
+                <input type="text" id="scan-code-input" class="scifi-input" placeholder="e.g. HNT-XYZ-450">
+                <button class="scifi-btn" onclick="scanOtherHunter()">Scan & Challenge</button>
+            </div>
+
+            <div class="scifi-panel" id="scanned-result-box" style="display: none;">
+                <div class="panel-header">◆ BATTLE ARENA VS PLAYER</div>
+                <div id="scanned-player-details" style="font-size: 0.85rem; margin-bottom: 10px;"></div>
+                <button class="scifi-btn" onclick="executePvPChallenge()">Initiate Duel Challenge</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav>
+        <button class="nav-item active" onclick="switchTab('hunter', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            HUNTER
+        </button>
+        <button class="nav-item" onclick="switchTab('quest', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            QUEST
+        </button>
+        <button class="nav-item" onclick="switchTab('dungeon', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            DUNGEON
+        </button>
+        <button class="nav-item" onclick="switchTab('network', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm1-13h-2v6h6v-2h-4V7z"/></svg>
+            NETWORK
+        </button>
+    </nav>
+
+    <!-- Camera / Proof Modal -->
+    <div class="modal" id="proof-modal">
+        <div class="modal-box">
+            <div class="panel-header">◆ UPLOAD EXERCISE PROOF PHOTO</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;" id="modal-exercise-title">Upload photo to complete task & claim XP.</div>
+            <input type="file" accept="image/*" capture="environment" id="camera-file-input" class="scifi-input" onchange="handlePhotoUpload(event)">
+            <div id="upload-preview-container" style="margin: 10px 0; text-align: center;"></div>
+            <div class="flex-row">
+                <button class="scifi-btn" onclick="submitTaskProof()" i
