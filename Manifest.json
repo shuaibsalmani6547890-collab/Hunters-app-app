@@ -1,0 +1,15 @@
+{
+  "name": "Hunter System",
+  "short_name": "HunterSys",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#080a0f",
+  "theme_color": "#0d0f18",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
